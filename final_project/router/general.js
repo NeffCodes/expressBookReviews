@@ -80,9 +80,33 @@ public_users.get('/author/:author',async function (req, res) {
 });
 
 // Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+public_users.get('/title/:title', async function (req, res) {
+  const title = req.params.title;
+  await getBooks()
+    .then((list) => {
+      //get isbn keys
+      const listKeys = Object.keys(list);
+
+      //find books by title
+      const titleBooks = [];
+      for(key of listKeys){
+        if(list[key].title === title) {
+          titleBooks.push({
+            "isbn": key,
+            "author": list[key].author,
+            "reviews": list[key].reviews,
+          })
+        }
+      }
+
+      return titleBooks.length > 0 ?
+        res.status(300).send(prettify({"booksByTitle":titleBooks})) :
+        res.status(404).send(`We currently do not have any books with the title "${title}"`)
+    })
+    .catch((err) => {
+      console.error(JSON.stringify(err));
+      return res.status(err.status).send(err.message)
+    })
 });
 
 //  Get book review

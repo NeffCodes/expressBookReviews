@@ -50,19 +50,24 @@ public_users.get("/", async function (req, res) {
     });
 });
 
+const getByISBN = async (isbn) => {
+  return new Promise((resolve, reject) => {
+    let isbnCode = parseInt(isbn);
+    if (books[isbnCode]) {
+      resolve(books[isbnCode]);
+    } else {
+      reject({ status: 404, message: `ISBN ${isbn} not found` });
+    }
+  });
+};
+
 // Get book details based on ISBN
 public_users.get("/isbn/:isbn", async function (req, res) {
-  const isbn = parseInt(req.params.isbn);
-  await getBooks()
-    .then((list) => {
-      return list[isbn]
-        ? res.status(300).send(prettify(list[isbn]))
-        : res.status(404).send(`ISBN ${isbn} does not exist`);
-    })
-    .catch((err) => {
-      console.error(JSON.stringify(err));
-      return res.status(err.status).send(err.message);
-    });
+  const isbn = req.params.isbn;
+  await getByISBN(isbn).then(
+    (result) => res.status(300).send(prettify(result)),
+    (error) => res.status(error.status).send(`ISBN ${isbn} does not exist`),
+  );
 });
 
 // Get book details based on author

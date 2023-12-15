@@ -110,9 +110,18 @@ public_users.get('/title/:title', async function (req, res) {
 });
 
 //  Get book review
-public_users.get('/review/:isbn',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+public_users.get('/review/:isbn', async function (req, res) {
+  const isbn = parseInt(req.params.isbn);
+  await getBooks()
+    .then((list) => {
+      return list[isbn] ?
+        res.status(300).send(prettify(list[isbn].reviews)) :
+        res.status(404).send(`ISBN ${isbn} does not exist`)
+    })
+    .catch((err) => {
+      console.error(JSON.stringify(err));
+      return res.status(err.status).send(err.message)
+    })
 });
 
 module.exports.general = public_users;

@@ -25,11 +25,9 @@ public_users.post("/register", (req, res) => {
   if (username && password) {
     if (!isValid(username)) {
       users.push({ username: username, password: password });
-      return res
-        .status(200)
-        .json({
-          message: `User ${username} Registered Successfully. You can now log in`,
-        });
+      return res.status(200).json({
+        message: `User ${username} Registered Successfully. You can now log in`,
+      });
     } else {
       return res
         .status(404)

@@ -15,6 +15,7 @@ const getBooks = async () => {
     });
 };
 
+const prettify = (msg) => JSON.stringify(msg, null, 4)
 
 public_users.post("/register", (req,res) => {
   //Write your code here
@@ -25,7 +26,7 @@ public_users.post("/register", (req,res) => {
 public_users.get('/', async function (req, res) {
   await getBooks()
     .then( (data) => {
-      return res.status(200).send(JSON.stringify(data,null,4))
+      return res.status(200).send(prettify(data))
     })
     .catch( (err) => {
       console.error(err);
@@ -38,11 +39,9 @@ public_users.get('/isbn/:isbn',async function (req, res) {
   const isbn = parseInt(req.params.isbn);
   await getBooks()
     .then((list) => {
-      if(list[isbn]){
-        return res.status(300).send(JSON.stringify(list[isbn],null,4))
-      } else {
-        return res.status(404).send({message: `ISBN ${isbn} does not exist`})
-      }
+      return list[isbn] ?
+        res.status(300).send(prettify(list[isbn])) :
+        res.status(404).send(`ISBN ${isbn} does not exist`)
     })
     .catch((err) => {
       console.error(JSON.stringify(err));
@@ -51,9 +50,33 @@ public_users.get('/isbn/:isbn',async function (req, res) {
  });
   
 // Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+public_users.get('/author/:author',async function (req, res) {
+  const author = req.params.author;
+  await getBooks()
+    .then((list) => {
+      //get isbn keys
+      const listKeys = Object.keys(list);
+
+      //find books by author
+      const authorsBooks = [];
+      for(key of listKeys){
+        if(list[key].author === author) {
+          authorsBooks.push({
+            "isbn": key,
+            "title": list[key].title,
+            "reviews": list[key].reviews,
+          })
+        }
+      }
+
+      return authorsBooks.length > 0 ?
+        res.status(300).send(prettify({"booksByAuthor":authorsBooks})) :
+        res.status(404).send(`We currently do not have any books by ${author}`)
+    })
+    .catch((err) => {
+      console.error(JSON.stringify(err));
+      return res.status(err.status).send(err.message)
+    })
 });
 
 // Get all books based on title
